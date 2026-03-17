@@ -949,18 +949,18 @@
     <p>Оставьте данные — свяжемся в течение часа и подберём тариф под ваш бизнес</p>
     <div class="form-group">
       <label>Имя</label>
-      <input type="text" placeholder="Ваше имя">
+      <input type="text" id="f-name" placeholder="Ваше имя">
     </div>
     <div class="form-group">
       <label>Телефон или Telegram</label>
-      <input type="text" placeholder="+375 XX XXX XX XX">
+      <input type="text" id="f-phone" placeholder="+375 XX XXX XX XX">
     </div>
     <div class="form-group">
       <label>Расскажите о задаче (необязательно)</label>
-      <textarea placeholder="Ниша, кол-во менеджеров, платформа..."></textarea>
+      <textarea id="f-msg" placeholder="Ниша, кол-во менеджеров, платформа..."></textarea>
     </div>
-    <button class="form-submit">Отправить заявку</button>
-    <div class="form-note">Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности</div>
+    <button class="form-submit" id="f-btn" onclick="sendForm()">Отправить заявку</button>
+    <div class="form-note" id="f-note">Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности</div>
   </div>
 </div>
 
@@ -1002,6 +1002,51 @@ calc();
 
 function openModal() { document.getElementById('modal').classList.add('open'); }
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function sendForm() {
+  const name  = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const msg   = document.getElementById('f-msg').value.trim();
+  const btn   = document.getElementById('f-btn');
+  const note  = document.getElementById('f-note');
+
+  if (!name || !phone) {
+    note.style.color = '#F87171';
+    note.textContent = 'Пожалуйста, заполните имя и телефон';
+    return;
+  }
+
+  btn.textContent = 'Отправляем...';
+  btn.disabled = true;
+
+  const text = `🔥 НОВАЯ ЗАЯВКА С ЛЕНДИНГА!\n\n👤 Имя: ${name}\n📞 Контакт: ${phone}${msg ? '\n💬 Задача: ' + msg : ''}\n\n🌐 Источник: Нейропродавец`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot8268946882:AAFYjIwPit8wxaUl7_XkaRQPwyRHh97bZII/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: '-4813103048', text, parse_mode: 'HTML' })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = '✓ Заявка отправлена!';
+      btn.style.background = 'linear-gradient(135deg, #22C55E, #16A34A)';
+      note.style.color = '#4ADE80';
+      note.textContent = 'Мы свяжемся с вами в течение часа';
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-phone').value = '';
+      document.getElementById('f-msg').value = '';
+      setTimeout(() => { closeModal(); btn.textContent = 'Отправить заявку'; btn.style.background = ''; btn.disabled = false; note.style.color = ''; note.textContent = 'Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности'; }, 2500);
+    } else {
+      throw new Error();
+    }
+  } catch(e) {
+    btn.textContent = 'Отправить заявку';
+    btn.disabled = false;
+    note.style.color = '#F87171';
+    note.textContent = 'Ошибка отправки. Напишите нам напрямую в Telegram';
+  }
+}
 document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 </script>
 </body>
